@@ -1,0 +1,32 @@
+CUDA simulation complete.
+Configuration:
+  size            = 128
+  steps           = 50
+  seed            = 12345
+  alive_prob      = 0.3
+  sanity_check    = false
+  output_state    = <none>
+  metrics_out     = <none>
+  block           = 16x8x8
+  verify          = true
+
+Initial summary:
+  live_cells      = 600946
+  checksum        = 0xf8313aa1968364d5
+
+Final summary:
+  live_cells      = 411475
+  checksum        = 0xfea41e7040fb2e2a
+
+Timing:
+  elapsed_ms      = 136.042
+
+Verification:
+  status          = PASS
+  mismatches      = 0
+  seq_checksum    = 0xfea41e7040fb2e2a
+  seq_elapsed_ms  = 6011.12
+
+Outputs:
+  final_state     = <none>
+  metrics_out     = <none>

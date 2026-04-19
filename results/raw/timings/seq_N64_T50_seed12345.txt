@@ -1,0 +1,24 @@
+Sequential CPU simulation complete.
+Configuration:
+  size            = 64
+  steps           = 50
+  seed            = 12345
+  alive_prob      = 0.3
+  sanity_check    = false
+  output_state    = <none>
+  metrics_out     = <none>
+
+Initial summary:
+  live_cells      = 71462
+  checksum        = 0x150f84a90f8e6567
+
+Final summary:
+  live_cells      = 48451
+  checksum        = 0x7a268673b610824a
+
+Timing:
+  elapsed_ms      = 728.352
+
+Outputs:
+  final_state     = <none>
+  metrics_out     = <none>
