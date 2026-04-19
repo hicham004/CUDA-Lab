@@ -26,12 +26,17 @@ add_library(ca_common STATIC
 target_include_directories(ca_common PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_compile_features(ca_common PUBLIC cxx_std_17)
 
-add_executable(ca_seq
+add_library(ca_sequential_core STATIC
   src/sequential/simulation.cpp
+)
+
+target_link_libraries(ca_sequential_core PUBLIC ca_common)
+
+add_executable(ca_seq
   src/sequential/main.cpp
 )
 
-target_link_libraries(ca_seq PRIVATE ca_common)
+target_link_libraries(ca_seq PRIVATE ca_sequential_core)
 
 include(CheckLanguage)
 if(CUDA_LAB_ENABLE_CUDA)
@@ -44,7 +49,7 @@ if(CUDA_LAB_ENABLE_CUDA)
       src/cuda/main.cu
     )
 
-    target_link_libraries(ca_cuda PRIVATE ca_common)
+    target_link_libraries(ca_cuda PRIVATE ca_common ca_sequential_core)
     set_target_properties(ca_cuda PROPERTIES
       CUDA_STANDARD 17
       CUDA_STANDARD_REQUIRED ON
