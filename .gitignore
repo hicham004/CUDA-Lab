@@ -11,7 +11,8 @@ build-*/
 *.ilk
 results/raw/timings/*.json
 results/raw/final_states/*.bin
-results/processed/tables/*.csv
 .wsl-cmake-venv/
 cmake-4.3.1/
 ca_seq_wsl
+report/*.docx
+report/~$*.docx

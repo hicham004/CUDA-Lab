@@ -15,6 +15,8 @@ param(
 
     [string[]]$BlockSizes = @("8x8x8", "16x8x8", "8x16x8"),
 
+    [bool]$VerifyCuda = $true,
+
     [switch]$Execute
 )
 
@@ -32,9 +34,11 @@ $plannedRuns = @()
 foreach ($size in $GridSizes) {
     $seqState = Join-Path $statesDir ("seq_N{0}_T{1}_seed{2}.bin" -f $size, $Steps, $Seed)
     $seqMetrics = Join-Path $timingsDir ("seq_N{0}_T{1}_seed{2}.json" -f $size, $Steps, $Seed)
+    $seqLog = Join-Path $timingsDir ("seq_N{0}_T{1}_seed{2}.txt" -f $size, $Steps, $Seed)
 
     $plannedRuns += [pscustomobject]@{
         Label = "seq N=$size"
+        LogPath = $seqLog
         Args = @(
             "-ExecutionPolicy", "Bypass",
             "-File", (Join-Path $PSScriptRoot "run_seq.ps1"),
@@ -60,24 +64,32 @@ foreach ($size in $GridSizes) {
 
         $cudaState = Join-Path $statesDir ("cuda_N{0}_T{1}_seed{2}_B{3}.bin" -f $size, $Steps, $Seed, $blockSize)
         $cudaMetrics = Join-Path $timingsDir ("cuda_N{0}_T{1}_seed{2}_B{3}.json" -f $size, $Steps, $Seed, $blockSize)
+        $cudaLog = Join-Path $timingsDir ("cuda_N{0}_T{1}_seed{2}_B{3}.txt" -f $size, $Steps, $Seed, $blockSize)
+
+        $cudaArgs = @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", (Join-Path $PSScriptRoot "run_cuda.ps1"),
+            "-Config", $Config,
+            "-BuildDir", $resolvedBuildDir,
+            "-Size", $size,
+            "-Steps", $Steps,
+            "-Seed", $Seed,
+            "-AliveProbability", $AliveProbability,
+            "-BlockX", $blockX,
+            "-BlockY", $blockY,
+            "-BlockZ", $blockZ,
+            "-OutputState", $cudaState,
+            "-MetricsOut", $cudaMetrics
+        )
+
+        if ($VerifyCuda) {
+            $cudaArgs += "-Verify"
+        }
 
         $plannedRuns += [pscustomobject]@{
             Label = "cuda N=$size B=$blockSize"
-            Args = @(
-                "-ExecutionPolicy", "Bypass",
-                "-File", (Join-Path $PSScriptRoot "run_cuda.ps1"),
-                "-Config", $Config,
-                "-BuildDir", $resolvedBuildDir,
-                "-Size", $size,
-                "-Steps", $Steps,
-                "-Seed", $Seed,
-                "-AliveProbability", $AliveProbability,
-                "-BlockX", $blockX,
-                "-BlockY", $blockY,
-                "-BlockZ", $blockZ,
-                "-OutputState", $cudaState,
-                "-MetricsOut", $cudaMetrics
-            )
+            LogPath = $cudaLog
+            Args = $cudaArgs
         }
     }
 }
@@ -96,5 +108,10 @@ if (-not $Execute) {
 
 foreach ($plannedRun in $plannedRuns) {
     Write-Host ("Running " + $plannedRun.Label)
-    & powershell @($plannedRun.Args)
+    $output = & powershell @($plannedRun.Args) 2>&1
+    $output | Tee-Object -FilePath $plannedRun.LogPath
+
+    if ($LASTEXITCODE -ne 0) {
+        throw ("Experiment failed for " + $plannedRun.Label + ". See " + $plannedRun.LogPath)
+    }
 }
